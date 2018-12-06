@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.amdocs.oss</groupId>
+		<artifactId>inventory-services</artifactId>
+		<version>10.0.0.1</version>
+		<relativePath>../..</relativePath>
+	</parent>
+
+	<groupId>com.amdocs.oss.inventory-services</groupId>
+	<artifactId>inv-ws-xpi-ass</artifactId>
+	<packaging>pom</packaging>
+	<name>Inventory WebServices XPI Assembly</name>
+
+	<properties>
+		<work.dir>${project.build.directory}/xpi-work</work.dir>
+		<invws.work.dir>${work.dir}/invws</invws.work.dir>
+		<invws.apps.storage.dir>${invws.work.dir}/software/core/applications/InventoryWebServices</invws.apps.storage.dir>
+	</properties>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>com.amdocs.installer</groupId>
+			<artifactId>amdocs-installer</artifactId>
+			<version>${xpi.core.version}</version>
+			<type>tar</type>
+		</dependency>
+
+		<dependency>
+			<groupId>com.amdocs.oss.inventory-services.inv-ws-xpi</groupId>
+			<artifactId>inv-ws-xdk-resources</artifactId>
+			<version>${project.version}</version>
+			<classifier>dist</classifier>
+			<type>zip</type>
+		</dependency>
+
+		<dependency>
+			<groupId>com.amdocs.oss.oss-xpi-foundations</groupId>
+			<artifactId>core-xpi-extensions</artifactId>
+			<version>${oss-xpi-foundations}</version>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>unpack-amdocs-installer</id>
+						<phase>package</phase>
+						<goals>
+							<goal>unpack-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeGroupIds>com.amdocs.installer</includeGroupIds>
+							<includeArtifactIds>amdocs-installer</includeArtifactIds>
+							<outputDirectory>${work.dir}</outputDirectory>
+						</configuration>
+					</execution>
+					<execution>
+						<id>unpack-resources</id>
+						<phase>package</phase>
+						<goals>
+							<goal>unpack-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeGroupIds>com.amdocs.oss.inventory-services.inv-ws-xpi</includeGroupIds>
+							<includeArtifactIds>inv-ws-xdk-resources</includeArtifactIds>
+							<outputDirectory>${invws.work.dir}</outputDirectory>
+							<excludes>**\/placeholder.txt</excludes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-xpi-extensions-jar</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeGroupIds>com.amdocs.oss.oss-xpi-foundations</includeGroupIds>
+							<includeArtifactIds>core-xpi-extensions</includeArtifactIds>
+							<excludeTransitive>true</excludeTransitive>
+							<stripVersion>true</stripVersion>
+							<outputDirectory>${invws.work.dir}/build/lib</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>package-inv-ws</id>
+						<phase>package</phase>
+
+						<goals>
+							<goal>run</goal>
+						</goals>
+
+						<configuration>
+							<tasks>
+								<echo>Building Inventory WebServices package through Ant...</echo>
+								<ant antfile="build.xml" dir="${invws.work.dir}/build/ant/invws" />
+								<copy todir="${project.build.directory}">
+									<fileset dir="${invws.work.dir}/packages" includes="*.jar" />
+								</copy>
+								<echo>Inventory WebServices package built and copied through Ant</echo>
+							</tasks>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-artifacts</id>
+						<phase>package</phase>
+						<goals>
+							<goal>attach-artifact</goal>
+						</goals>
+						<configuration>
+							<artifacts>
+								<artifact>
+									<file>${project.build.directory}/InventoryWebServices-${project.version}.jar</file>
+									<type>jar</type>
+								</artifact>
+							</artifacts>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
